@@ -23,6 +23,3 @@ if response.status_code == 200:
 else:
     print("Lỗi khi lấy dữ liệu:", response.status_code)
 
-# 5. Xem thử dữ liệu
-import json
-print(json.dumps(data, indent=2))  # in đẹp dữ liệu JSON
