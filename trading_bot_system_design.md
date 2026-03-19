@@ -18,3 +18,6 @@ mô hình ML
 
 
 NOTE: thêm vào đó mô hình UI để tương tác với bot, thì mỗi một mã cổ phiếu sẽ chỉ được mua 1 lần duy nhất (tùy số lượng cổ phiếu) để đảm bảo Risk Management, có thể mua nhiều mã cổ phiếu cùng 1 lúc
+
+
+Link một vài DIAGRAM về quy trình của project: https://drive.google.com/drive/folders/17YiWbPSQf12buyKTuSlyT8V7hwJ6tcoc?usp=drive_link
