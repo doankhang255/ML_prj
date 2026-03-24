@@ -3,77 +3,152 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, accuracy_score
-import matplotlib.pyplot as plt 
-import matplotlib.dates as mdates
 
-# 1. Load dữ liệu
-df = pd.read_csv("Data_Stock/data_ACB.csv", parse_dates=['time'])
+# =========================
+# 1) Giả sử df đã có các cột:
+# open, high, low, close, volume
+# =========================
 
-# 2. Tính MA10 và MA50
-df['MA10'] = df['close'].rolling(window=10).mean()
-df['MA50'] = df['close'].rolling(window=50).mean()
+# Ví dụ:
+df = pd.read_csv("stock_data.csv")
 
-# 3. Xây dựng label cho MA crossover
-# 1 = mua, -1 = bán, 0 = giữ
-def generate_label(row, prev_row):
-    if np.isnan(prev_row['MA10']) or np.isnan(prev_row['MA50']):
-        return 0
-    # MA10 cắt lên MA50 → mua
-    if prev_row['MA10'] < prev_row['MA50'] and row['MA10'] > row['MA50']:
-        return 1
-    # MA10 cắt xuống MA50 → bán
-    elif prev_row['MA10'] > prev_row['MA50'] and row['MA10'] < row['MA50']:
-        return -1
-    else:
-        return 0
+# =========================
+# 2) Feature Engineering (giữ nguyên như trước)
+# =========================
 
-df['label'] = 0
-for i in range(1, len(df)):
-    df.loc[i, 'label'] = generate_label(df.iloc[i], df.iloc[i-1])
+df["ma10"] = df["close"].rolling(10).mean()
+df["ma20"] = df["close"].rolling(20).mean()
+df["ma50"] = df["close"].rolling(50).mean()
 
-# 4. Chọn feature và label
-features = ['open', 'high', 'low', 'close', 'MA10', 'MA50']
-df = df.dropna()  # bỏ các hàng đầu không có MA50
-X = df[features]
-y = df['label']
+df["ma_gap_10_50"] = (df["ma10"] - df["ma50"]) / df["ma50"]
 
-# 5. Chia dữ liệu train/test (train: 2023-04-25 → 2024-07-30)
-train_df = df[df['time'] <= '2024-07-30']
-X_train = train_df[features]
-y_train = train_df['label']
+df["return_1d"] = df["close"].pct_change(1)
 
-# 6. Khởi tạo và train Random Forest
-rf = RandomForestClassifier(n_estimators=100, random_state=42)
-rf.fit(X_train, y_train)
+df["vol_ma20"] = df["volume"].rolling(20).mean()
+df["volume_ratio"] = df["volume"] / df["vol_ma20"]
 
-# 7. Kiểm tra accuracy trên cùng dữ liệu train (để tham khảo)
-y_pred_train = rf.predict(X_train)
-print("Accuracy trên train data:", accuracy_score(y_train, y_pred_train))
-print(classification_report(y_train, y_pred_train))
+df["body"] = (df["close"] - df["open"]).abs()
+df["range"] = df["high"] - df["low"]
+df["body_ratio"] = df["body"] / df["range"].replace(0, np.nan)
 
-print("Mô hình Random Forest đã train xong!")
+# RSI(14)
+delta = df["close"].diff()
+gain = delta.where(delta > 0, 0).rolling(14).mean()
+loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
+rs = gain / loss.replace(0, np.nan)
+df["rsi14"] = 100 - (100 / (1 + rs))
 
-# 5. Vẽ biểu đồ
-plt.figure(figsize=(16,6))
-plt.plot(train_df['time'], train_df['MA10'], label='MA10', color='blue')
-plt.plot(train_df['time'], train_df['MA50'], label='MA50', color='red')
+# =========================
+# 3) Tạo tín hiệu crossover
+# =========================
 
-# Vẽ các điểm mua/bán
-plt.scatter(train_df[train_df['label']==1]['time'], 
-            train_df[train_df['label']==1]['close'], 
-            color='green', label='Buy Signal', marker='^', s=100)
-plt.scatter(train_df[train_df['label']==-1]['time'], 
-            train_df[train_df['label']==-1]['close'], 
-            color='black', label='Sell Signal', marker='v', s=100)
+df["prev_ma10"] = df["ma10"].shift(1)
+df["prev_ma50"] = df["ma50"].shift(1)
 
-ax = plt.gca()
-ax.xaxis.set_major_locator(mdates.DayLocator(interval=5))  # hiển thị 1 tick mỗi 5 ngày
-ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-plt.xticks(rotation=45)
+df["buy_crossover"] = (
+    (df["prev_ma10"] <= df["prev_ma50"]) &
+    (df["ma10"] > df["ma50"])
+).astype(int)
 
-plt.title("MA Crossover - ACB (Train Data)")
-plt.xlabel("Date")
-plt.ylabel("Price")
-plt.legend()
-plt.grid(True)
-plt.show()
+# =========================
+# 4) LABEL GENERATION MỚI
+# Nếu chạm target trước H ngày thì dừng luôn
+# =========================
+
+TARGET_RETURN = 0.03   # target lợi nhuận 3%
+H = 5                  # tối đa 5 ngày
+
+labels = []
+days_to_target = []
+
+for i in range(len(df)):
+    # Không đủ dữ liệu tương lai để xét H ngày
+    if i + H >= len(df):
+        labels.append(np.nan)
+        days_to_target.append(np.nan)
+        continue
+
+    entry_price = df["close"].iloc[i]
+    target_price = entry_price * (1 + TARGET_RETURN)
+
+    # Lấy giá close của H ngày tiếp theo
+    future_closes = df["close"].iloc[i + 1 : i + H + 1].values
+
+    label = 0
+    hit_day = np.nan
+
+    # Duyệt từng ngày tương lai
+    for j, future_price in enumerate(future_closes, start=1):
+        # Nếu chạm target sớm thì dừng luôn
+        if future_price >= target_price:
+            label = 1
+            hit_day = j
+            break
+
+    labels.append(label)
+    days_to_target.append(hit_day)
+
+df["label"] = labels
+df["days_to_target"] = days_to_target
+
+# =========================
+# 5) Chỉ giữ các điểm crossover để train
+# =========================
+
+feature_cols = [
+    "ma10", "ma20", "ma50",
+    "ma_gap_10_50",
+    "return_1d",
+    "volume_ratio",
+    "body_ratio",
+    "rsi14"
+]
+
+train_df = df[df["buy_crossover"] == 1].copy()
+
+# Bỏ các dòng thiếu dữ liệu
+train_df = train_df.dropna(subset=feature_cols + ["label"])
+
+# =========================
+# 6) Tạo X và y
+# =========================
+
+X = train_df[feature_cols]
+y = train_df["label"]
+
+# =========================
+# 7) Train / Test
+# =========================
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, shuffle=False
+)
+
+model = RandomForestClassifier(
+    n_estimators=200,
+    max_depth=5,
+    random_state=42,
+    class_weight="balanced"
+)
+
+model.fit(X_train, y_train)
+
+# =========================
+# 8) Dự đoán
+# =========================
+
+y_pred = model.predict(X_test)
+y_prob = model.predict_proba(X_test)[:, 1]
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+
+# =========================
+# 9) Xem kết quả
+# =========================
+
+result = train_df.loc[X_test.index, feature_cols + ["label", "days_to_target"]].copy()
+result["pred_label"] = y_pred
+result["p_win"] = y_prob
+
+print(result.head(10))
