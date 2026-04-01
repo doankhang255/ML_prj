@@ -55,41 +55,64 @@ df["buy_crossover"] = (
 # Nếu chạm target trước H ngày thì dừng luôn
 # =========================
 
-TARGET_RETURN = 0.03   # target lợi nhuận 3%
+TARGET_RETURN = 0.03   # target lợi nhuận 3% 
+MAX_DRAWDOWN = -0.02    # giá giảm tối đa 2% 
 H = 5                  # tối đa 5 ngày
+total_fee_pct = 0.003  # phí sàn 
 
+future_max_returns = []
+future_min_returns = []
 labels = []
 days_to_target = []
+entry_prices = []
 
 for i in range(len(df)):
     # Không đủ dữ liệu tương lai để xét H ngày
     if i + H >= len(df):
+        future_max_returns.append(np.nan)
+        future_min_returns.append(np.nan)
         labels.append(np.nan)
         days_to_target.append(np.nan)
+        entry_price.append(np.nan)
         continue
 
-    entry_price = df["close"].iloc[i]
-    target_price = entry_price * (1 + TARGET_RETURN)
+    entry_price = df["open"].iloc[i+1]
+    entry_price.append(entry_price)
+    
+    # high and low of the next days
+    future_high = df["high"].iloc[i + 1 : i + H + 1].values
+    future_low = df["low"].iloc[i + 1 : i + H + 1].values
 
-    # Lấy giá close của H ngày tiếp theo
-    future_closes = df["close"].iloc[i + 1 : i + H + 1].values
+    # max return and min return 
+    future_max_return = (future_high.max() - entry_price) / entry_price
+    future_min_return = (future_low.min() - entry_price) / entry_price
 
-    label = 0
+    future_max_return.append(future_max_return)
+    future_min_return.append(future_min_return)
+
+    required_return = TARGET_RETURN + total_fee_pct
+    target_price = entry_price * (1 + required_return)
+
     hit_day = np.nan
-
-    # Duyệt từng ngày tương lai
-    for j, future_price in enumerate(future_closes, start=1):
-        # Nếu chạm target sớm thì dừng luôn
-        if future_price >= target_price:
-            label = 1
+    for j, future_high in enumerate(future_high, start=1):
+        if future_high >= target_price:
             hit_day = j
             break
 
-    labels.append(label)
     days_to_target.append(hit_day)
 
-df["label"] = labels
-df["days_to_target"] = days_to_target
+    # Label nhị phân
+    label = int(
+        (future_max_return >= required_return) and
+        (future_min_return >= MAX_DRAWDOWN)
+    )
+    labels.append(label)
+
+df["entry_price"] = entry_prices
+df["future_max_return_5d"] = future_max_returns
+df["future_min_return_5d"] = future_min_returns
+df["days_to_target_5d"] = days_to_target
+df["buy_label"] = labels
 
 # =========================
 # 5) Chỉ giữ các điểm crossover để train
@@ -107,14 +130,15 @@ feature_cols = [
 train_df = df[df["buy_crossover"] == 1].copy()
 
 # Bỏ các dòng thiếu dữ liệu
-train_df = train_df.dropna(subset=feature_cols + ["label"])
+train_df = train_df.dropna(subset = feature_cols + ["buy_label"])
+train_df["buy_label"] = train_df["buy_label"].astype(int)
 
 # =========================
 # 6) Tạo X và y
 # =========================
 
 X = train_df[feature_cols]
-y = train_df["label"]
+y = train_df["buy_label"]
 
 # =========================
 # 7) Train / Test
@@ -147,7 +171,7 @@ print(classification_report(y_test, y_pred))
 # 9) Xem kết quả
 # =========================
 
-result = train_df.loc[X_test.index, feature_cols + ["label", "days_to_target"]].copy()
+result = train_df.loc[X_test.index, feature_cols + ["buy_label", "days_to_target_5d","future_max_return_5d", "future_min_return_5d"]].copy()
 result["pred_label"] = y_pred
 result["p_win"] = y_prob
 
