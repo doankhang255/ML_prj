@@ -4,8 +4,6 @@ import os
 
 # Kết nối Binance
 binance = ccxt.binance({
-    'apiKey': 'wVdhljHHMFJMJ0foVKau9zHt4M98N4GGCurpuZuD0e65uKHlciE3lrxHKwPirUsl',
-    'secret': 'kjDQ0ssSusTTAXNWqXndUexUcDO9DZ4RuQNHA2ptzwAghVSIZ7PSrx5oFgoExAei',
 })
 
 # Lấy dữ liệu lịch sử

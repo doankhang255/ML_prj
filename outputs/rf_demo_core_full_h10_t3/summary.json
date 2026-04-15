@@ -1,0 +1,105 @@
+{
+  "config": {
+    "candidate_mode": "crossover_only",
+    "timeframe": "1D",
+    "horizon": 10,
+    "target_return": 0.03,
+    "stop_loss": -0.02,
+    "fee_pct": 0.003,
+    "prob_threshold": 0.55,
+    "ambiguity_mode": "conservative",
+    "capital_per_trade": 10000000
+  },
+  "data": {
+    "raw_rows": 71406,
+    "tickers": 100,
+    "raw_start_date": "2023-02-06",
+    "raw_end_date": "2026-03-12",
+    "candidate_rows_after_feature_filter": 854,
+    "train_rows": 690,
+    "test_rows": 164,
+    "split_date": "2025-07-17",
+    "largest_tickers_by_rows": {
+      "ACB": 717,
+      "BCM": 717,
+      "BHN": 717,
+      "BID": 717,
+      "BMP": 717,
+      "BSI": 717,
+      "BSR": 717,
+      "BVH": 717,
+      "BWE": 717,
+      "CII": 717
+    }
+  },
+  "features": {
+    "requested_feature_count": 18,
+    "used_feature_count": 17,
+    "used_feature_cols": [
+      "ma10_ma50_ratio",
+      "close_ma10_ratio",
+      "dist_ma10_ma50_pct",
+      "ma10_slope_3d",
+      "ma50_slope_3d",
+      "return_3d",
+      "return_5d",
+      "rsi",
+      "macd_hist",
+      "volume_ratio_20",
+      "volume_change_pct",
+      "atr_pct",
+      "rolling_std_10",
+      "body_ratio",
+      "upper_wick_ratio",
+      "lower_wick_ratio",
+      "close_position"
+    ],
+    "dropped_constant_features": [
+      "golden_cross"
+    ]
+  },
+  "model_metrics": {
+    "accuracy": 0.6341463414634146,
+    "threshold": 0.55,
+    "test_samples": 164,
+    "positive_predictions": 37,
+    "classification_report": {
+      "loss": {
+        "precision": 0.7244094488188977,
+        "recall": 0.7863247863247863,
+        "f1-score": 0.7540983606557377,
+        "support": 117.0
+      },
+      "win": {
+        "precision": 0.32432432432432434,
+        "recall": 0.2553191489361702,
+        "f1-score": 0.2857142857142857,
+        "support": 47.0
+      },
+      "accuracy": 0.6341463414634146,
+      "macro avg": {
+        "precision": 0.524366886571611,
+        "recall": 0.5208219676304783,
+        "f1-score": 0.5199063231850116,
+        "support": 164.0
+      },
+      "weighted avg": {
+        "precision": 0.6097509070430138,
+        "recall": 0.6341463414634146,
+        "f1-score": 0.6198663391786143,
+        "support": 164.0
+      }
+    }
+  },
+  "backtest": {
+    "selected_trades": 36,
+    "skipped_due_overlap": 1,
+    "win_rate": 0.3333333333333333,
+    "avg_return_net": -0.004750491159135595,
+    "median_return_net": -0.023000000000000017,
+    "total_return_sum": -0.17101768172888143,
+    "total_pnl_vnd": -1710176.8172888143,
+    "avg_bars_held": 2.5,
+    "target_hit_rate": 0.3333333333333333
+  }
+}

@@ -3,7 +3,6 @@ from pymongo import MongoClient
 from pymongo import UpdateOne
 import certifi
 
-MONGO_URI = "mongodb+srv://doankhangll255_db_user:EGyi6XqdcCAwxbrf@cluster0.ufdio5k.mongodb.net/?retryWrites=true&w=majority"
 
 client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
 db = client["stock_ml"]

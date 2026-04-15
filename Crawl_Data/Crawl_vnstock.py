@@ -5,7 +5,7 @@ import os
 
 # Danh sách 20 mã cổ phiếu HOSE
 stocks = [
-        "VCB","VIC","VHM","BID","TCB","CTG","FPT","HPG","GAS","MBB"
+        "VCB","VIC","VHM","BID","TCB","CTG","FPT","HPG","GAS","MBB",
         "VPB","VNM","ACB","MSN","MWG","LPB","STB","HVN","GVR","HDB",
         "SAB","BCM","BSR","VRE","VIB","SHB","SSB","VJC","SSI","EIB",
         "BVH","REE","DGC","GEE","TPB","MSB","GEX","POW","KDH","NVL",

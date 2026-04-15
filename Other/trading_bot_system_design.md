@@ -21,3 +21,5 @@ NOTE: thêm vào đó mô hình UI để tương tác với bot, thì mỗi mộ
 
 
 Link một vài DIAGRAM về quy trình của project: https://drive.google.com/drive/folders/17YiWbPSQf12buyKTuSlyT8V7hwJ6tcoc?usp=drive_link
+
+<!-- MONGO_URI = "mongodb+srv://doankhangll255_db_user:EGyi6XqdcCAwxbrf@cluster0.ufdio5k.mongodb.net/?retryWrites=true&w=majority" -->
