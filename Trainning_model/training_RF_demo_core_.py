@@ -7,9 +7,13 @@ from pathlib import Path
 import certifi
 import numpy as np
 import pandas as pd
+from dotenv import load_dotenv
 from pymongo import MongoClient
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(PROJECT_ROOT / ".env")
 
 
 # This file implements a full baseline pipeline:

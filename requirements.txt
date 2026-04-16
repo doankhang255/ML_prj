@@ -13,6 +13,7 @@ ccxt
 pymongo
 certifi
 pyarrow
+python-dotenv
 
 # Optional export used by training_RF_demo_core_.py when --export-excel is enabled
 openpyxl

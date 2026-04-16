@@ -7,25 +7,28 @@ import time
 
 import certifi
 import pandas as pd
+from dotenv import load_dotenv
 from pymongo import MongoClient, UpdateOne
 from vnstock import Quote
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(PROJECT_ROOT / ".env")
 
 
 # =========================
 # User config
 # =========================
-# Paste your MongoDB URI here, or leave this empty and set env var MONGO_URI.
+# Mongo config is loaded from the root .env file.
 MONGO_URI = os.getenv("MONGO_URI", "").strip()
-MONGO_DB = "stock_ml"
-MONGO_COLLECTION = "raw_ohlcv_daily"
+MONGO_DB = os.getenv("MONGO_DB", "stock_ml").strip() or "stock_ml"
+MONGO_COLLECTION = os.getenv("MONGO_COLLECTION", "raw_ohlcv_daily").strip() or "raw_ohlcv_daily"
 
-VNSTOCK_SOURCE = "vci"  # You can change to "ssi" or "mas" if needed.
+VNSTOCK_SOURCE = os.getenv("VNSTOCK_SOURCE", "vci").strip() or "vci"
 TIMEFRAME = "1D"
 INITIAL_START_DATE = date(2022, 1, 1)
 REQUEST_DELAY_SECONDS = 0.2
 BULK_WRITE_BATCH_SIZE = 1000
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PARQUET_ROOT = PROJECT_ROOT / "Parquet_Stock"
 PARQUET_FILE_NAME = "ohlcv_daily.parquet"
 
@@ -77,8 +80,8 @@ def resolve_mongo_uri() -> str:
     mongo_uri = MONGO_URI.strip()
     if not mongo_uri:
         raise ValueError(
-            "Missing MongoDB URI. Paste it into MONGO_URI at the top of this file "
-            "or set environment variable MONGO_URI before running."
+            "Missing MongoDB URI. Please set MONGO_URI in the root .env file "
+            "before running this script."
         )
     return mongo_uri
 
