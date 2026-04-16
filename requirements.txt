@@ -1,0 +1,18 @@
+# Core data stack
+pandas
+numpy
+
+# ML
+scikit-learn
+
+# Data sources
+vnstock
+ccxt
+
+# Storage / database
+pymongo
+certifi
+pyarrow
+
+# Optional export used by training_RF_demo_core_.py when --export-excel is enabled
+openpyxl
