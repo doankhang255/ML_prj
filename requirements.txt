@@ -4,6 +4,9 @@ numpy
 
 # ML
 scikit-learn
+lightgbm
+tensorflow
+statsmodels
 
 # Data sources
 vnstock
@@ -17,3 +20,6 @@ python-dotenv
 
 # Optional export used by training_RF_demo_core_.py when --export-excel is enabled
 openpyxl
+
+# Plotting
+matplotlib
