@@ -4,15 +4,18 @@ import pandas as pd
 import os
 import time
 import random
+from pathlib import Path
 
-stocks = ["VNINDEX"]
+stocks = ["ACB"]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+OUTPUT_DIR = PROJECT_ROOT / "Dataset"
 
 # Ngày kết thúc là hôm nay, bắt đầu là 30 ngày trước
 end_date = datetime.today().strftime("%Y-%m-%d")
 start_date = (datetime.today() - timedelta(days=2000)).strftime("%Y-%m-%d")
 
 # Tạo folder nếu chưa tồn tại
-os.makedirs("Raw_Data", exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 for symbol in stocks:
     try:
@@ -28,7 +31,7 @@ for symbol in stocks:
         if df is None or df.empty:
             print(f"Không có dữ liệu cho {symbol}")
         else:
-            filename = os.path.join("Raw_Data", f"data_{symbol}.csv")
+            filename = OUTPUT_DIR / f"data_{symbol}.csv"
             df.to_csv(filename, index=False, encoding="utf-8-sig")
             print(f"Lấy dữ liệu của {symbol} thành công: {len(df)} dòng")
 
