@@ -89,9 +89,8 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
     out["Return"] = out["Close"].pct_change()
     out["Return_Pct"] = out["Return"] * 100
-    out["Next_Return"] = out["Return"].shift(-1)
-    out["Next_Return_Pct"] = out["Return_Pct"].shift(-1)
-    out["Next_Close"] = out["Close"].shift(-1)
+    future_close_10d = out["Close"].shift(-10)
+    out["Future_Return_10D"] = future_close_10d / out["Close"] - 1
     out["High_Low_Spread"] = out["High"] - out["Low"]
     out["Close_Open_Change"] = out["Close"] - out["Open"]
     out["DayOfWeek"] = out["Date"].dt.dayofweek
