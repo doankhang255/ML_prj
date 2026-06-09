@@ -6,6 +6,7 @@ numpy
 scikit-learn
 lightgbm
 tensorflow
+torch
 statsmodels
 
 # Data sources
