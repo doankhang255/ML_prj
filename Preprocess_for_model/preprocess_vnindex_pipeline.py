@@ -89,21 +89,41 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
     out["Return"] = out["Close"].pct_change()
     out["Return_Pct"] = out["Return"] * 100
+    out["Target_Date_1D"] = out["Date"].shift(-1)
+    out["Future_Return_1D"] = out["Return"].shift(-1)
+    out["Future_Return_1D_Pct"] = out["Future_Return_1D"] * 100
     future_close_10d = out["Close"].shift(-10)
     out["Future_Return_10D"] = future_close_10d / out["Close"] - 1
     out["High_Low_Spread"] = out["High"] - out["Low"]
     out["Close_Open_Change"] = out["Close"] - out["Open"]
+    out["High_Low_Range_Pct"] = (out["High"] - out["Low"]) / out["Close"]
+    out["Close_Open_Return"] = out["Close"] / out["Open"] - 1
     out["DayOfWeek"] = out["Date"].dt.dayofweek
     out["Month"] = out["Date"].dt.month
     out["Year"] = out["Date"].dt.year
     out["MA7"] = out["Close"].rolling(window=7, min_periods=7).mean()
     out["MA14"] = out["Close"].rolling(window=14, min_periods=14).mean()
     out["MA30"] = out["Close"].rolling(window=30, min_periods=30).mean()
+    out["Close_MA7_Ratio"] = out["Close"] / out["MA7"] - 1
+    out["Close_MA14_Ratio"] = out["Close"] / out["MA14"] - 1
+    out["Close_MA30_Ratio"] = out["Close"] / out["MA30"] - 1
+    out["MA7_MA14_Ratio"] = out["MA7"] / out["MA14"] - 1
+    out["MA7_MA30_Ratio"] = out["MA7"] / out["MA30"] - 1
+    out["Return_MA3"] = out["Return"].rolling(window=3, min_periods=3).mean()
+    out["Return_MA5"] = out["Return"].rolling(window=5, min_periods=5).mean()
+    out["Return_MA10"] = out["Return"].rolling(window=10, min_periods=10).mean()
     out["Volatility_7"] = out["Close"].rolling(window=7, min_periods=7).std()
     out["Volatility_14"] = out["Close"].rolling(window=14, min_periods=14).std()
+    out["Return_Volatility_7"] = out["Return"].rolling(window=7, min_periods=7).std()
+    out["Return_Volatility_14"] = out["Return"].rolling(window=14, min_periods=14).std()
+    if "Volume" in out.columns:
+        out["Volume_Change_Pct"] = out["Volume"].pct_change()
+        out["Volume_Ratio_7"] = out["Volume"] / out["Volume"].rolling(window=7, min_periods=7).mean()
+        out["Volume_Ratio_14"] = out["Volume"] / out["Volume"].rolling(window=14, min_periods=14).mean()
     for lag in [1, 2, 3, 5]:
         out[f"Close_Lag_{lag}"] = out["Close"].shift(lag)
         out[f"Return_Lag_{lag}"] = out["Return"].shift(lag)
+    out = out.replace([np.inf, -np.inf], np.nan)
     return out.dropna().reset_index(drop=True)
 
 

@@ -18,41 +18,40 @@ SPLIT_RATIOS = {
 }
 
 TARGET_COLUMN = "Next_Close"
+RETURN_1D_TARGET_COLUMN = "Future_Return_1D"
 RETURN_10D_TARGET_COLUMN = "Future_Return_10D"
 FORBIDDEN_FEATURE_COLUMNS = {
     "Next_Close",
     "Next_Return",
     "Next_Return_Pct",
+    "Future_Return_1D",
+    "Future_Return_1D_Pct",
     "Future_Close_10D",
     "Future_Return_10D",
 }
 
 FEATURE_COLUMNS = [
-    "Open",
-    "High",
-    "Low",
-    "Close",
-    "Volume",
     "Return",
     "Return_Pct",
-    "High_Low_Spread",
-    "Close_Open_Change",
-    "DayOfWeek",
-    "Month",
-    "Year",
-    "MA7",
-    "MA14",
-    "MA30",
-    "Volatility_7",
-    "Volatility_14",
-    "Close_Lag_1",
-    "Close_Lag_2",
-    "Close_Lag_3",
-    "Close_Lag_5",
     "Return_Lag_1",
     "Return_Lag_2",
     "Return_Lag_3",
     "Return_Lag_5",
+    "Return_MA3",
+    "Return_MA5",
+    "Return_MA10",
+    "High_Low_Range_Pct",
+    "Close_Open_Return",
+    "Close_MA7_Ratio",
+    "Close_MA14_Ratio",
+    "Close_MA30_Ratio",
+    "MA7_MA14_Ratio",
+    "MA7_MA30_Ratio",
+    "Return_Volatility_7",
+    "Return_Volatility_14",
+    "Volume_Change_Pct",
+    "Volume_Ratio_7",
+    "Volume_Ratio_14",
 ]
 
 
@@ -64,6 +63,8 @@ def load_feature_data(
     if "Date" in df.columns:
         df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
         df = df.dropna(subset=["Date"]).sort_values("Date")
+    if "Target_Date_1D" in df.columns:
+        df["Target_Date_1D"] = pd.to_datetime(df["Target_Date_1D"], errors="coerce")
 
     required = FEATURE_COLUMNS + [target_column]
     missing = [col for col in required if col not in df.columns]
@@ -74,7 +75,10 @@ def load_feature_data(
     if leaked:
         raise ValueError(f"Forbidden future columns in FEATURE_COLUMNS: {leaked}")
 
-    df = df.dropna(subset=required).reset_index(drop=True)
+    required_dates = [col for col in ["Date", "Target_Date_1D"] if col in df.columns]
+    df = df.dropna(subset=required + required_dates).reset_index(drop=True)
+    if "Date" in df.columns and not df["Date"].is_monotonic_increasing:
+        raise ValueError("Date column must be sorted from oldest to newest.")
     return df
 
 
@@ -91,6 +95,17 @@ def split_dataframe(
     val = df.iloc[train_size : train_size + val_size].copy()
     test = df.iloc[train_size + val_size :].copy()
     sizes = {"total": n, "train": len(train), "val": len(val), "test": len(test)}
+    if "Date" in df.columns:
+        sizes.update(
+            {
+                "train_start": str(train["Date"].min().date()),
+                "train_end": str(train["Date"].max().date()),
+                "val_start": str(val["Date"].min().date()),
+                "val_end": str(val["Date"].max().date()),
+                "test_start": str(test["Date"].min().date()),
+                "test_end": str(test["Date"].max().date()),
+            }
+        )
     return train, val, test, sizes
 
 
@@ -118,6 +133,13 @@ def create_sequence_windows(
     y_values: np.ndarray,
     look_back: int,
 ) -> tuple[np.ndarray, np.ndarray]:
+    if look_back < 1:
+        raise ValueError("look_back must be at least 1.")
+    if len(x_values) < look_back:
+        raise ValueError(
+            f"Need at least look_back={look_back} rows, got {len(x_values)}."
+        )
+
     x_windows, y_targets = [], []
     for i in range(look_back - 1, len(x_values)):
         x_windows.append(x_values[i - look_back + 1 : i + 1])

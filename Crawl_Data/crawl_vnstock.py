@@ -6,13 +6,13 @@ import time
 import random
 from pathlib import Path
 
-stocks = ["ACB"]
+stocks = ["VNINDEX"]
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = PROJECT_ROOT / "Dataset"
 
 # Ngày kết thúc là hôm nay, bắt đầu là 30 ngày trước
 end_date = datetime.today().strftime("%Y-%m-%d")
-start_date = (datetime.today() - timedelta(days=2000)).strftime("%Y-%m-%d")
+start_date = (datetime.today() - timedelta(days=4000)).strftime("%Y-%m-%d")
 
 # Tạo folder nếu chưa tồn tại
 os.makedirs(OUTPUT_DIR, exist_ok=True)
