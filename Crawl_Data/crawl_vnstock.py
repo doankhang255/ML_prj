@@ -6,13 +6,16 @@ import time
 import random
 from pathlib import Path
 
-stocks = ["VNINDEX"]
+stocks = [
+    "ACB", "BID", "BSR", "CTG", "FPT", "GAS", "GVR", "HDB", "HPG",
+    "LPB", "MBB", "MSN", "MWG", "PLX", "SAB", "SHB", "SSI", "STB",
+    "TPB", "VCB", "VHM", "VIB", "VIC", "VJC", "VNM", "VPB", "VRE"
+]
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = PROJECT_ROOT / "Dataset"
 
-# Ngày kết thúc là hôm nay, bắt đầu là 30 ngày trước
 end_date = datetime.today().strftime("%Y-%m-%d")
-start_date = (datetime.today() - timedelta(days=4000)).strftime("%Y-%m-%d")
+start_date = (datetime.today() - timedelta(days=2800)).strftime("%Y-%m-%d")
 
 # Tạo folder nếu chưa tồn tại
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -23,6 +26,7 @@ for symbol in stocks:
 
         quote = Quote(source="VCI", symbol=symbol)
         df = quote.history(
+
             start=start_date,
             end=end_date,
             interval="1D"
