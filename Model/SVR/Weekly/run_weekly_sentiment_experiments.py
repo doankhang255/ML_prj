@@ -160,7 +160,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run multiple weekly sentiment SVR tuning experiments and summarize results."
     )
-    parser.add_argument("--targets", default="future_ret_1w,future_ret_4w_compound")
+    parser.add_argument("--targets", default="future_ret_1w,future_ret_4w")
     parser.add_argument("--feature-sets", default="market,sentiment,combined")
     parser.add_argument("--scalers", default="standard,robust")
     parser.add_argument("--objectives", default="mae,corr,diracc")

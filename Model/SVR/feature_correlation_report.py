@@ -47,7 +47,6 @@ DAILY_SHOCK_FEATURE_COLUMNS = [
     "negative_ratio_change_1d",
     "news_attention_shock",
     "volume_shock_20d",
-    "value_shock_20d",
     "range_shock_20d",
     "return_shock_z_20d",
     "large_down_day",
