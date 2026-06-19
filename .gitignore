@@ -7,3 +7,13 @@ __pycache__
 .vscode
 .DS_Store
 venv
+vncorenlp
+hub/
+hub
+*.parquet
+*.csv
+result.md
+weekly_sentiment_svr_improvement_plan.md
+data_VNINDEX.csv
+Dataset/
+*.json
